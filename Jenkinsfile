@@ -11,9 +11,20 @@ pipeline {
     }
 	
     stages {
-        stage('Build') { 
+        stage('Build & SonarQube analysis') { 
+			agent any
             steps {
-                sh 'mvn -B -DskipTests clean package' 
+				withSonarQubeEnv('My SonarQube Server') {
+					sh 'mvn clean package sonar:sonar'
+				}
+            }
+        }
+		
+		stage("Quality Gate") {
+            steps {
+              timeout(time: 1, unit: 'HOURS') {
+                waitForQualityGate abortPipeline: true
+              }
             }
         }
 		
